@@ -21,6 +21,7 @@
 		AA000012 /* UIColor+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100012 /* UIColor+Hex.swift */; };
 		AA000013 /* HubScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100013 /* HubScene.swift */; };
 		AA000014 /* GameOverScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100014 /* GameOverScene.swift */; };
+		AA000015 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100015 /* SoundManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +39,7 @@
 		AA100012 /* UIColor+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Hex.swift"; sourceTree = "<group>"; };
 		AA100013 /* HubScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubScene.swift; sourceTree = "<group>"; };
 		AA100014 /* GameOverScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverScene.swift; sourceTree = "<group>"; };
+		AA100015 /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
 		AAPROD001 /* Mathonauten.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mathonauten.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -59,6 +61,7 @@
 				AAGRP005 /* Models */,
 				AAGRP006 /* Shared */,
 				AA100014 /* GameOverScene.swift */,
+				AA100015 /* SoundManager.swift */,
 			);
 			path = Mathonauten;
 			sourceTree = "<group>";
@@ -190,6 +193,7 @@
 				AA000012 /* UIColor+Hex.swift in Sources */,
 				AA000013 /* HubScene.swift in Sources */,
 				AA000014 /* GameOverScene.swift in Sources */,
+				AA000015 /* SoundManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

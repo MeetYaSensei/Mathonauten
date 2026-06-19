@@ -38,6 +38,7 @@ class BattleScene: SKScene {
         setupPlayerHP()
         setupRoboPanel()
         nextQuestion(table: multiplicationTable)
+        SoundManager.shared.playBGM(SoundName.bgmBattle)
     }
 
     // MARK: - Background
@@ -357,12 +358,14 @@ class BattleScene: SKScene {
     func answerSelected(_ answer: Int) {
         guard let q = currentQuestion else { return }
         if answer == q.correctAnswer {
+            SoundManager.shared.playSFX(SoundName.correct)
             enemyHP -= 1
             streak = min(streak + 1, 5)
             updateEnemyHP()
             updateStreakDots()
             if enemyHP <= 0 { enemyDefeated(); return }
         } else {
+            SoundManager.shared.playSFX(SoundName.wrong)
             playerHP -= 1
             streak = 0
             updatePlayerHP()
@@ -391,6 +394,7 @@ class BattleScene: SKScene {
     }
 
     func enemyDefeated() {
+        SoundManager.shared.playSFX(SoundName.defeat)
         let starsEarned = playerHP == playerMaxHP ? 3 : (playerHP > 1 ? 2 : 1)
         ProgressManager.shared.completeWave(starsEarned: starsEarned)
         let wait = SKAction.wait(forDuration: 0.8)

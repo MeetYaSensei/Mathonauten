@@ -20,6 +20,8 @@ class GameOverScene: SKScene {
     override func didMove(to view: SKView) {
         backgroundColor = UIColor(hex: "#08102a")
         buildUI()
+        SoundManager.shared.stopBGM()
+        SoundManager.shared.playSFX(SoundName.gameOver)
     }
 
     private func buildUI() {
@@ -86,12 +88,14 @@ class GameOverScene: SKScene {
         feedback.impactOccurred()
 
         if node.name == "retry_btn" || node.parent?.name == "retry_btn" {
+            SoundManager.shared.playSFX(SoundName.tap)
             let battle = BattleScene(size: size, planetIndex: planetIndex)
             battle.scaleMode = .aspectFill
             battle.anchorPoint = CGPoint(x: 0.5, y: 0.5)
             view?.presentScene(battle, transition: SKTransition.fade(withDuration: 0.4))
         }
         if node.name == "map_btn" || node.parent?.name == "map_btn" {
+            SoundManager.shared.playSFX(SoundName.tap)
             let map = MapScene(size: size)
             map.scaleMode = .aspectFill
             map.anchorPoint = CGPoint(x: 0.5, y: 0.5)

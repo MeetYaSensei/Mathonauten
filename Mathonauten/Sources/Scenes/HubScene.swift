@@ -22,6 +22,7 @@ class HubScene: SKScene {
         setupDailyChallenges()
         setupBottomNav()
         refreshUI()
+        SoundManager.shared.playBGM(SoundName.bgmHub)
     }
 
     // MARK: - Refresh
@@ -490,10 +491,12 @@ class HubScene: SKScene {
             guard let name = node.name else { continue }
             switch name {
             case "tab_map", "bottom_map":
+                SoundManager.shared.playSFX(SoundName.tap)
                 guard let view = view else { return }
                 SceneManager.transition(to: .map, from: view)
                 return
             case "playBtn":
+                SoundManager.shared.playSFX(SoundName.tap)
                 let battle = BattleScene(size: size)
                 battle.scaleMode = .aspectFill
                 battle.anchorPoint = CGPoint(x: 0.5, y: 0.5)

@@ -17,6 +17,8 @@ class RewardScene: SKScene {
     override func didMove(to view: SKView) {
         backgroundColor = UIColor(hex: "#08102a")
         buildUI()
+        SoundManager.shared.stopBGM()
+        SoundManager.shared.playSFX(SoundName.victory)
     }
 
     private func buildUI() {
@@ -82,12 +84,14 @@ class RewardScene: SKScene {
         let node = atPoint(loc)
 
         if node.name == "nextBtn" || node.parent?.name == "nextBtn" {
+            SoundManager.shared.playSFX(SoundName.tap)
             let battle = BattleScene(size: size)
             battle.scaleMode = .aspectFill
             battle.anchorPoint = CGPoint(x: 0.5, y: 0.5)
             view?.presentScene(battle, transition: SKTransition.fade(withDuration: 0.5))
         }
         if node.name == "hubBtn" || node.parent?.name == "hubBtn" {
+            SoundManager.shared.playSFX(SoundName.tap)
             let hub = HubScene(size: size)
             hub.scaleMode = .aspectFill
             hub.anchorPoint = CGPoint(x: 0.5, y: 0.5)
