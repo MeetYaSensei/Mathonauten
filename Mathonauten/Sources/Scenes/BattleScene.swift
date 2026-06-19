@@ -10,6 +10,7 @@ class BattleScene: SKScene {
     private let playerMaxHP = 3
     private var enemyHP     = 5
     private var streak      = 0
+    private var isGameOver  = false
 
     private var W: CGFloat { size.width }
     private var H: CGFloat { size.height }
@@ -403,14 +404,17 @@ class BattleScene: SKScene {
     }
 
     func playerDefeated() {
+        guard !isGameOver else { return }
+        isGameOver = true
         ProgressManager.shared.failWave()
         let wait = SKAction.wait(forDuration: 0.8)
+        let idx = self.planetIndex
+        let wave = ProgressManager.shared.currentWaveIndex
         let go = SKAction.run { [weak self] in
             guard let self = self else { return }
-            let hub = HubScene(size: self.size)
-            hub.scaleMode = .aspectFill
-            hub.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-            self.view?.presentScene(hub, transition: SKTransition.fade(withDuration: 0.5))
+            let scene = GameOverScene(planetIndex: idx, waveIndex: wave, size: self.size)
+            scene.scaleMode = .aspectFill
+            self.view?.presentScene(scene, transition: SKTransition.fade(withDuration: 0.4))
         }
         run(SKAction.sequence([wait, go]))
     }
