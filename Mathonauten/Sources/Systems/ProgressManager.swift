@@ -1,92 +1,73 @@
 import Foundation
-import Combine
 
-/// Verwaltet den gesamten Spielfortschritt – persistent via UserDefaults.
-final class ProgressManager: ObservableObject {
-
+final class ProgressManager {
     static let shared = ProgressManager()
+    private let defaults = UserDefaults.standard
+    private init() {}
 
-    // MARK: - Keys
-    private enum Keys {
-        static let unlockedPlanets   = "unlockedPlanets"
-        static let completedPlanets  = "completedPlanets"
-        static let collectedRewards  = "collectedRewards"
-        static let highScores        = "highScores"
-        static let roboUnlocked      = "roboUnlocked"
-        static let cosmoUnlocked     = "cosmoUnlocked"
+    var currentPlanetIndex: Int {
+        get { defaults.integer(forKey: "currentPlanetIndex") }
+        set { defaults.set(newValue, forKey: "currentPlanetIndex") }
+    }
+    var currentWaveIndex: Int {
+        get { defaults.integer(forKey: "currentWaveIndex") }
+        set { defaults.set(newValue, forKey: "currentWaveIndex") }
+    }
+    var unlockedPlanets: Set<Int> {
+        get { Set(defaults.array(forKey: "unlockedPlanets") as? [Int] ?? [0]) }
+        set { defaults.set(Array(newValue), forKey: "unlockedPlanets") }
+    }
+    var stars: Int {
+        get { defaults.integer(forKey: "stars") }
+        set { defaults.set(newValue, forKey: "stars") }
+    }
+    var gems: Int {
+        get { defaults.integer(forKey: "gems") }
+        set { defaults.set(newValue, forKey: "gems") }
     }
 
-    // MARK: - Published State
-    @Published var unlockedPlanets:  Set<String>
-    @Published var completedPlanets: Set<String>
-    @Published var collectedRewards: Set<String>
-    @Published var highScores:       [String: Int]
-    @Published var isRoboUnlocked:   Bool
-    @Published var isCosmoUnlocked:  Bool
-
-    // MARK: - Init
-    private init() {
-        let ud = UserDefaults.standard
-        unlockedPlanets  = Set(ud.stringArray(forKey: Keys.unlockedPlanets)  ?? ["planet_1"])
-        completedPlanets = Set(ud.stringArray(forKey: Keys.completedPlanets) ?? [])
-        collectedRewards = Set(ud.stringArray(forKey: Keys.collectedRewards) ?? [])
-        highScores       = ud.dictionary(forKey: Keys.highScores) as? [String: Int] ?? [:]
-        isRoboUnlocked   = ud.bool(forKey: Keys.roboUnlocked)
-        isCosmoUnlocked  = ud.bool(forKey: Keys.cosmoUnlocked)
+    struct PlanetData {
+        let name: String
+        let multiplicationTable: Int
+        let totalWaves: Int
+        let color: String
     }
 
-    // MARK: - Save
-    func save() {
-        let ud = UserDefaults.standard
-        ud.set(Array(unlockedPlanets),  forKey: Keys.unlockedPlanets)
-        ud.set(Array(completedPlanets), forKey: Keys.completedPlanets)
-        ud.set(Array(collectedRewards), forKey: Keys.collectedRewards)
-        ud.set(highScores,              forKey: Keys.highScores)
-        ud.set(isRoboUnlocked,          forKey: Keys.roboUnlocked)
-        ud.set(isCosmoUnlocked,         forKey: Keys.cosmoUnlocked)
+    let planets: [PlanetData] = [
+        PlanetData(name: "Erde",     multiplicationTable: 2, totalWaves: 5, color: "#1d7a44"),
+        PlanetData(name: "Flammos",  multiplicationTable: 3, totalWaves: 5, color: "#9a3c1d"),
+        PlanetData(name: "Frostara", multiplicationTable: 4, totalWaves: 5, color: "#1a5a8a"),
+        PlanetData(name: "Bluma",    multiplicationTable: 5, totalWaves: 5, color: "#3b6d11"),
+        PlanetData(name: "Astrox",   multiplicationTable: 6, totalWaves: 8, color: "#6a2a8a"),
+    ]
+
+    var currentPlanet: PlanetData { planets[currentPlanetIndex] }
+
+    var planetProgress: Float {
+        Float(currentWaveIndex) / Float(currentPlanet.totalWaves)
     }
 
-    // MARK: - Actions
-    func unlockPlanet(_ id: String) {
-        unlockedPlanets.insert(id)
-        save()
-    }
-
-    func completePlanet(_ id: String) {
-        completedPlanets.insert(id)
-        save()
-    }
-
-    func collectReward(_ id: String) {
-        collectedRewards.insert(id)
-        save()
-    }
-
-    func updateHighScore(planetID: String, score: Int) {
-        if score > (highScores[planetID] ?? 0) {
-            highScores[planetID] = score
-            save()
+    func completeWave(starsEarned: Int) {
+        stars += starsEarned
+        currentWaveIndex += 1
+        if currentWaveIndex >= currentPlanet.totalWaves {
+            let next = currentPlanetIndex + 1
+            if next < planets.count {
+                var unlocked = unlockedPlanets
+                unlocked.insert(next)
+                unlockedPlanets = unlocked
+                currentPlanetIndex = next
+                currentWaveIndex = 0
+            }
         }
     }
 
-    func unlockRobo() {
-        isRoboUnlocked = true
-        save()
-    }
+    func failWave() {}
 
-    func unlockCosmo() {
-        isCosmoUnlocked = true
-        save()
+    var hubProgressText: String {
+        "\(currentPlanet.name) · \(currentPlanet.multiplicationTable)er-Reihe"
     }
-
-    /// Setzt alles zurück (Debug / Einstellungen)
-    func resetAll() {
-        unlockedPlanets  = ["planet_1"]
-        completedPlanets = []
-        collectedRewards = []
-        highScores       = [:]
-        isRoboUnlocked   = false
-        isCosmoUnlocked  = false
-        save()
+    var hubLevelText: String {
+        "Level \(currentWaveIndex)/\(currentPlanet.totalWaves)"
     }
 }

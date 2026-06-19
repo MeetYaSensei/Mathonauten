@@ -64,34 +64,32 @@ class MapScene: SKScene {
     }
 
     private func setupPlanets() {
-        let colors: [String] = ["#3A7D44","#E25822","#4FC3F7","#66BB6A","#9C27B0","#FF7043"]
+        let pm = ProgressManager.shared
         let portraitPositions: [CGPoint] = [
-            CGPoint(x: 0,          y:  H * 0.30),
-            CGPoint(x:  W * 0.15,  y:  H * 0.10),
-            CGPoint(x: -W * 0.15,  y: -H * 0.10),
-            CGPoint(x:  W * 0.10,  y: -H * 0.28),
-            CGPoint(x:  0,         y: -H * 0.42),
-            CGPoint(x: -W * 0.10,  y: -H * 0.52),
+            CGPoint(x: 0,         y:  H * 0.30),
+            CGPoint(x:  W * 0.15, y:  H * 0.10),
+            CGPoint(x: -W * 0.15, y: -H * 0.10),
+            CGPoint(x:  W * 0.10, y: -H * 0.28),
+            CGPoint(x:  0,        y: -H * 0.42),
         ]
 
-        let planets = Planet.all
-        for i in 0..<min(planets.count, portraitPositions.count) {
-            let planet = planets[i]
+        for (i, planet) in pm.planets.enumerated() {
+            guard i < portraitPositions.count else { break }
             let pos = portraitPositions[i]
+            let isUnlocked = pm.unlockedPlanets.contains(i)
+            let isCompleted = pm.currentPlanetIndex > i
 
             if i > 0 {
                 let prevPos = portraitPositions[i - 1]
-                let line = lineBetween(prevPos, pos)
-                addChild(line)
+                addChild(lineBetween(prevPos, pos))
             }
 
-            let radius: CGFloat = 32
-            let circle = SKShapeNode(circleOfRadius: radius)
-            circle.fillColor = UIColor(hex: colors[i % colors.count])
+            let circle = SKShapeNode(circleOfRadius: 32)
+            circle.fillColor = UIColor(hex: planet.color)
             circle.strokeColor = .clear
             circle.position = pos
-            circle.name = "planet_\(planet.id)"
-            circle.alpha = planet.isUnlocked ? 1.0 : 0.35
+            circle.name = "planet_\(i)"
+            circle.alpha = isUnlocked ? 1.0 : 0.35
             addChild(circle)
 
             let nameLabel = SKLabelNode(text: planet.name)
@@ -99,11 +97,11 @@ class MapScene: SKScene {
             nameLabel.fontSize = 12
             nameLabel.fontColor = .white
             nameLabel.verticalAlignmentMode = .center
-            nameLabel.position = CGPoint(x: pos.x, y: pos.y - radius - 14)
-            nameLabel.name = "label_\(planet.id)"
+            nameLabel.position = CGPoint(x: pos.x, y: pos.y - 46)
+            nameLabel.name = "label_\(i)"
             addChild(nameLabel)
 
-            if planet.isCompleted {
+            if isCompleted {
                 let check = SKLabelNode(text: "✓")
                 check.fontSize = 18
                 check.fontColor = UIColor(hex: "#1d9e75")
@@ -128,33 +126,24 @@ class MapScene: SKScene {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
         let location = touch.location(in: self)
-        let nodes = self.nodes(at: location)
-        print("MapScene Touch bei: \(location)")
-        print("Getroffene Nodes: \(nodes.map { $0.name ?? "kein Name" })")
 
-        for node in nodes {
+        for node in nodes(at: location) {
             guard let name = node.name else { continue }
             if name == "btn_back" {
                 guard let view = view else { return }
                 SceneManager.transition(to: .hub, from: view)
                 return
             }
-            var planetID = ""
+            var idx = -1
             if name.hasPrefix("planet_") {
-                planetID = name.replacingOccurrences(of: "planet_", with: "")
+                idx = Int(name.replacingOccurrences(of: "planet_", with: "")) ?? -1
             } else if name.hasPrefix("label_") {
-                planetID = name.replacingOccurrences(of: "label_", with: "")
-            } else { continue }
-
-            print("PlanetID: \(planetID)")
-            guard let planet = Planet.find(id: planetID), planet.isUnlocked else {
-                print("Planet gesperrt oder nicht gefunden")
-                return
+                idx = Int(name.replacingOccurrences(of: "label_", with: "")) ?? -1
             }
+            guard idx >= 0, ProgressManager.shared.unlockedPlanets.contains(idx) else { continue }
             guard let view = view else { return }
-            SceneManager.transition(to: .battle(planetID: planetID), from: view)
+            SceneManager.transition(to: .battle(planetIndex: idx), from: view)
             return
         }
-        print("Kein Planet-Node getroffen")
     }
 }

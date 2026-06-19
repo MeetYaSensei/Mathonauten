@@ -5,12 +5,11 @@ class HubScene: SKScene {
     private var W: CGFloat { size.width }
     private var H: CGFloat { size.height }
 
-    private var currentPlanet: Planet? {
-        Planet.all.first {
-            ProgressManager.shared.unlockedPlanets.contains($0.id) &&
-            !ProgressManager.shared.completedPlanets.contains($0.id)
-        } ?? Planet.all.first { ProgressManager.shared.unlockedPlanets.contains($0.id) }
-    }
+    private var progressBarFill: SKShapeNode!
+    private var progressLabel: SKLabelNode!
+    private var levelLabel: SKLabelNode!
+    private var starsLabel: SKLabelNode!
+    private var gemsLabel: SKLabelNode!
 
     override func didMove(to view: SKView) {
         setupBackground()
@@ -22,6 +21,18 @@ class HubScene: SKScene {
         setupProgressBanner()
         setupDailyChallenges()
         setupBottomNav()
+        refreshUI()
+    }
+
+    // MARK: - Refresh
+
+    func refreshUI() {
+        let pm = ProgressManager.shared
+        progressBarFill?.xScale = max(CGFloat(pm.planetProgress), 0.02)
+        progressLabel?.text = pm.hubProgressText
+        levelLabel?.text = pm.hubLevelText
+        starsLabel?.text = "⭐ \(pm.stars)"
+        gemsLabel?.text = "💎 \(pm.gems)"
     }
 
     // MARK: - Background
@@ -88,13 +99,35 @@ class HubScene: SKScene {
         lvLabel.position = CGPoint(x: -W * 0.15, y: y - 9)
         addChild(lvLabel)
 
-        badge(text: "⭐ 240", fillHex: "#131d3a", strokeHex: "#2a3a6e",
-              textColor: "#eedd88", size: CGSize(width: 60, height: 22),
-              pos: CGPoint(x: W * 0.18, y: y))
+        let starsBg = SKShapeNode(rectOf: CGSize(width: 60, height: 22), cornerRadius: 6)
+        starsBg.fillColor = UIColor(hex: "#131d3a")
+        starsBg.strokeColor = UIColor(hex: "#2a3a6e")
+        starsBg.lineWidth = 1
+        starsBg.position = CGPoint(x: W * 0.18, y: y)
+        addChild(starsBg)
 
-        badge(text: "💎 12", fillHex: "#131d3a", strokeHex: "#2a3a6e",
-              textColor: "#aa88ff", size: CGSize(width: 55, height: 22),
-              pos: CGPoint(x: W * 0.32, y: y))
+        starsLabel = SKLabelNode(text: "⭐ 0")
+        starsLabel.fontName = "AvenirNext-Regular"
+        starsLabel.fontSize = 10
+        starsLabel.fontColor = UIColor(hex: "#eedd88")
+        starsLabel.verticalAlignmentMode = .center
+        starsLabel.position = CGPoint(x: W * 0.18, y: y)
+        addChild(starsLabel)
+
+        let gemsBg = SKShapeNode(rectOf: CGSize(width: 55, height: 22), cornerRadius: 6)
+        gemsBg.fillColor = UIColor(hex: "#131d3a")
+        gemsBg.strokeColor = UIColor(hex: "#2a3a6e")
+        gemsBg.lineWidth = 1
+        gemsBg.position = CGPoint(x: W * 0.32, y: y)
+        addChild(gemsBg)
+
+        gemsLabel = SKLabelNode(text: "💎 0")
+        gemsLabel.fontName = "AvenirNext-Regular"
+        gemsLabel.fontSize = 10
+        gemsLabel.fontColor = UIColor(hex: "#aa88ff")
+        gemsLabel.verticalAlignmentMode = .center
+        gemsLabel.position = CGPoint(x: W * 0.32, y: y)
+        addChild(gemsLabel)
 
         let settings = SKShapeNode(rectOf: CGSize(width: 28, height: 28), cornerRadius: 6)
         settings.fillColor = UIColor(hex: "#131d3a")
@@ -116,7 +149,6 @@ class HubScene: SKScene {
     private func setupNavTabs() {
         let y = H * 0.38
         let tabW = W / 5 - 8
-        let tabH: CGFloat = 38
         let tabs: [(String, String, String)] = [
             ("🏠", "Hub",     "tab_hub"),
             ("🗺", "Karte",   "tab_map"),
@@ -128,7 +160,7 @@ class HubScene: SKScene {
 
         for (i, tab) in tabs.enumerated() {
             let isActive = i == 0
-            let bg = SKShapeNode(rectOf: CGSize(width: tabW, height: tabH), cornerRadius: 8)
+            let bg = SKShapeNode(rectOf: CGSize(width: tabW, height: 38), cornerRadius: 8)
             bg.fillColor = isActive ? UIColor(hex: "#534AB7") : UIColor(hex: "#131d3a")
             bg.strokeColor = isActive ? UIColor(hex: "#7a70d4") : UIColor(hex: "#2a3a6e")
             bg.lineWidth = 1
@@ -154,7 +186,7 @@ class HubScene: SKScene {
         }
     }
 
-    // MARK: - Robo Character
+    // MARK: - Robo
 
     private func setupRobo() {
         let by = H * 0.10
@@ -201,18 +233,17 @@ class HubScene: SKScene {
         emblem.position = CGPoint(x: 0, y: by)
         addChild(emblem)
 
-        let emblemLabel = SKLabelNode(text: "⚡")
-        emblemLabel.fontSize = 12
-        emblemLabel.verticalAlignmentMode = .center
-        emblemLabel.position = CGPoint(x: 0, y: by)
-        addChild(emblemLabel)
+        let emblemIcon = SKLabelNode(text: "⚡")
+        emblemIcon.fontSize = 12
+        emblemIcon.verticalAlignmentMode = .center
+        emblemIcon.position = CGPoint(x: 0, y: by)
+        addChild(emblemIcon)
 
         let bubbleW: CGFloat = 90
-        let bubbleH: CGFloat = 24
         let bubbleX: CGFloat = 65 + bubbleW / 2
         let bubbleY = by + 56
 
-        let bubble = SKShapeNode(rectOf: CGSize(width: bubbleW, height: bubbleH), cornerRadius: 8)
+        let bubble = SKShapeNode(rectOf: CGSize(width: bubbleW, height: 24), cornerRadius: 8)
         bubble.fillColor = UIColor(hex: "#1a2a5e")
         bubble.strokeColor = UIColor(hex: "#534AB7")
         bubble.lineWidth = 1.5
@@ -249,14 +280,14 @@ class HubScene: SKScene {
         btn.strokeColor = UIColor(hex: "#1d9e75")
         btn.lineWidth = 2
         btn.position = CGPoint(x: 0, y: y)
-        btn.name = "btn_play"
+        btn.name = "playBtn"
         addChild(btn)
 
         let circle = SKShapeNode(circleOfRadius: 14)
         circle.fillColor = UIColor(hex: "#1d9e75")
         circle.strokeColor = .clear
         circle.position = CGPoint(x: -btnW/2 + 26, y: y)
-        circle.name = "btn_play"
+        circle.name = "playBtn"
         addChild(circle)
 
         let playIcon = SKLabelNode(text: "▶")
@@ -264,7 +295,7 @@ class HubScene: SKScene {
         playIcon.fontColor = .white
         playIcon.verticalAlignmentMode = .center
         playIcon.position = CGPoint(x: -btnW/2 + 27, y: y)
-        playIcon.name = "btn_play"
+        playIcon.name = "playBtn"
         addChild(playIcon)
 
         let playLabel = SKLabelNode(text: "SPIELEN!")
@@ -273,7 +304,7 @@ class HubScene: SKScene {
         playLabel.fontColor = UIColor(hex: "#9fe1cb")
         playLabel.verticalAlignmentMode = .center
         playLabel.position = CGPoint(x: 16, y: y)
-        playLabel.name = "btn_play"
+        playLabel.name = "playBtn"
         addChild(playLabel)
     }
 
@@ -281,10 +312,7 @@ class HubScene: SKScene {
 
     private func setupProgressBanner() {
         let y = -H * 0.22
-        let planet = currentPlanet
-        let completed = ProgressManager.shared.completedPlanets.count
-        let total = Planet.all.count
-        let progress = total > 0 ? CGFloat(completed) / CGFloat(total) : 0.4
+        let pm = ProgressManager.shared
 
         let banner = SKShapeNode(rectOf: CGSize(width: W - 28, height: 44), cornerRadius: 10)
         banner.fillColor = UIColor(hex: "#131d3a")
@@ -293,23 +321,23 @@ class HubScene: SKScene {
         banner.position = CGPoint(x: 0, y: y)
         addChild(banner)
 
-        let leftLabel = SKLabelNode(text: "\(planet?.name ?? "Kein Planet") · \(planet?.multiplicationTable ?? 2)er-Reihe")
-        leftLabel.fontName = "AvenirNext-Regular"
-        leftLabel.fontSize = 10
-        leftLabel.fontColor = UIColor(hex: "#8899cc")
-        leftLabel.horizontalAlignmentMode = .left
-        leftLabel.verticalAlignmentMode = .center
-        leftLabel.position = CGPoint(x: -(W-28)/2 + 12, y: y + 7)
-        addChild(leftLabel)
+        progressLabel = SKLabelNode(text: pm.hubProgressText)
+        progressLabel.fontName = "AvenirNext-Regular"
+        progressLabel.fontSize = 10
+        progressLabel.fontColor = UIColor(hex: "#8899cc")
+        progressLabel.horizontalAlignmentMode = .left
+        progressLabel.verticalAlignmentMode = .center
+        progressLabel.position = CGPoint(x: -(W-28)/2 + 12, y: y + 7)
+        addChild(progressLabel)
 
-        let rightLabel = SKLabelNode(text: "Level \(completed)/\(total)")
-        rightLabel.fontName = "AvenirNext-Regular"
-        rightLabel.fontSize = 10
-        rightLabel.fontColor = UIColor(hex: "#aabbee")
-        rightLabel.horizontalAlignmentMode = .right
-        rightLabel.verticalAlignmentMode = .center
-        rightLabel.position = CGPoint(x: (W-28)/2 - 12, y: y + 7)
-        addChild(rightLabel)
+        levelLabel = SKLabelNode(text: pm.hubLevelText)
+        levelLabel.fontName = "AvenirNext-Regular"
+        levelLabel.fontSize = 10
+        levelLabel.fontColor = UIColor(hex: "#aabbee")
+        levelLabel.horizontalAlignmentMode = .right
+        levelLabel.verticalAlignmentMode = .center
+        levelLabel.position = CGPoint(x: (W-28)/2 - 12, y: y + 7)
+        addChild(levelLabel)
 
         let barW = W - 56
         let barY = y - 10
@@ -320,12 +348,11 @@ class HubScene: SKScene {
         barBg.position = CGPoint(x: 0, y: barY)
         addChild(barBg)
 
-        let fillW = max(barW * progress, 4)
-        let fill = SKShapeNode(rectOf: CGSize(width: fillW, height: 7), cornerRadius: 3)
-        fill.fillColor = UIColor(hex: "#534AB7")
-        fill.strokeColor = .clear
-        fill.position = CGPoint(x: -barW/2 + fillW/2, y: barY)
-        addChild(fill)
+        progressBarFill = SKShapeNode(rectOf: CGSize(width: barW, height: 7), cornerRadius: 3)
+        progressBarFill.fillColor = UIColor(hex: "#534AB7")
+        progressBarFill.strokeColor = .clear
+        progressBarFill.position = CGPoint(x: 0, y: barY)
+        addChild(progressBarFill)
     }
 
     // MARK: - Daily Challenges
@@ -353,9 +380,8 @@ class HubScene: SKScene {
 
         let cardY = -H * 0.34
         let cardW = W / 3 - 12
-        let cardH: CGFloat = 70
         let cards: [(String, String, String, CGFloat)] = [
-            ("⚡", "3 Kämpfe",   "+50 ⭐", 0.66),
+            ("⚡", "3 Kämpfe",    "+50 ⭐", 0.66),
             ("🎯", "10x richtig", "+30 ⭐", 0.30),
             ("🌍", "Planet done", "💎 +2",  0.00),
         ]
@@ -363,8 +389,7 @@ class HubScene: SKScene {
 
         for (i, card) in cards.enumerated() {
             let cx = cardXs[i]
-
-            let cardBg = SKShapeNode(rectOf: CGSize(width: cardW, height: cardH), cornerRadius: 12)
+            let cardBg = SKShapeNode(rectOf: CGSize(width: cardW, height: 70), cornerRadius: 12)
             cardBg.fillColor = UIColor(hex: "#131d3a")
             cardBg.strokeColor = UIColor(hex: "#2a3a6e")
             cardBg.lineWidth = 1
@@ -418,7 +443,7 @@ class HubScene: SKScene {
     private func setupBottomNav() {
         let y = -H * 0.46
 
-        let navBg = SKShapeNode(rectOf: CGSize(width: W, height: 56), cornerRadius: 0)
+        let navBg = SKShapeNode(rectOf: CGSize(width: W, height: 56))
         navBg.fillColor = UIColor(hex: "#0d1630")
         navBg.strokeColor = UIColor(hex: "#1e2d5a")
         navBg.lineWidth = 1
@@ -455,26 +480,6 @@ class HubScene: SKScene {
         }
     }
 
-    // MARK: - Helpers
-
-    private func badge(text: String, fillHex: String, strokeHex: String,
-                       textColor: String, size: CGSize, pos: CGPoint) {
-        let bg = SKShapeNode(rectOf: size, cornerRadius: 6)
-        bg.fillColor = UIColor(hex: fillHex)
-        bg.strokeColor = UIColor(hex: strokeHex)
-        bg.lineWidth = 1
-        bg.position = pos
-        addChild(bg)
-
-        let lbl = SKLabelNode(text: text)
-        lbl.fontName = "AvenirNext-Regular"
-        lbl.fontSize = 10
-        lbl.fontColor = UIColor(hex: textColor)
-        lbl.verticalAlignmentMode = .center
-        lbl.position = pos
-        addChild(lbl)
-    }
-
     // MARK: - Touch
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -488,10 +493,11 @@ class HubScene: SKScene {
                 guard let view = view else { return }
                 SceneManager.transition(to: .map, from: view)
                 return
-            case "btn_play":
-                guard let view = view else { return }
-                let planetID = currentPlanet?.id ?? "planet_1"
-                SceneManager.transition(to: .battle(planetID: planetID), from: view)
+            case "playBtn":
+                let battle = BattleScene(size: size)
+                battle.scaleMode = .aspectFill
+                battle.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+                view?.presentScene(battle, transition: SKTransition.push(with: .left, duration: 0.4))
                 return
             case "tab_hub", "bottom_hub":
                 return

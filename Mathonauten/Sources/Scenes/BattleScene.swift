@@ -2,21 +2,28 @@ import SpriteKit
 
 class BattleScene: SKScene {
 
-    private let planetID: String
+    private let planetIndex: Int
+    private let multiplicationTable: Int
+    private let enemyName: String
     private var currentQuestion: MathQuestion?
-    private var playerHP = 3
-    private var enemyHP  = 5
-    private var streak   = 0
+    private var playerHP    = 3
+    private let playerMaxHP = 3
+    private var enemyHP     = 5
+    private var streak      = 0
 
     private var W: CGFloat { size.width }
     private var H: CGFloat { size.height }
 
-    init(size: CGSize, planetID: String) {
-        self.planetID = planetID
+    init(size: CGSize, planetIndex: Int? = nil) {
+        let idx = planetIndex ?? ProgressManager.shared.currentPlanetIndex
+        let planet = ProgressManager.shared.planets[idx]
+        self.planetIndex = idx
+        self.multiplicationTable = planet.multiplicationTable
+        self.enemyName = planet.name + "-Alien"
         super.init(size: size)
     }
 
-    required init?(coder: NSCoder) { fatalError("init(coder:) not implemented") }
+    required init?(coder: NSCoder) { fatalError() }
 
     override func didMove(to view: SKView) {
         setupBackground()
@@ -29,10 +36,7 @@ class BattleScene: SKScene {
         setupAnswerButtons()
         setupPlayerHP()
         setupRoboPanel()
-
-        guard let planet = Planet.find(id: planetID) else { return }
-        nextQuestion(table: planet.multiplicationTable)
-        print("BattleScene loaded – Portrait \(W)×\(H)")
+        nextQuestion(table: multiplicationTable)
     }
 
     // MARK: - Background
@@ -61,10 +65,10 @@ class BattleScene: SKScene {
     // MARK: - Top Bar
 
     private func setupTopBar() {
-        let planet = Planet.find(id: planetID)
+        let pm = ProgressManager.shared
         let y = H * 0.44
 
-        let leftLabel = SKLabelNode(text: planet?.name ?? "Planet")
+        let leftLabel = SKLabelNode(text: pm.planets[planetIndex].name)
         leftLabel.fontName = "AvenirNext-Regular"
         leftLabel.fontSize = 11
         leftLabel.fontColor = UIColor(hex: "#8899cc")
@@ -73,14 +77,14 @@ class BattleScene: SKScene {
         leftLabel.position = CGPoint(x: -W / 3, y: y)
         addChild(leftLabel)
 
-        let badge = SKShapeNode(rectOf: CGSize(width: 72, height: 20), cornerRadius: 6)
+        let badge = SKShapeNode(rectOf: CGSize(width: 84, height: 20), cornerRadius: 6)
         badge.fillColor = UIColor(hex: "#1a2a5e")
         badge.strokeColor = UIColor(hex: "#3a4a9e")
         badge.lineWidth = 1
         badge.position = CGPoint(x: 0, y: y)
         addChild(badge)
 
-        let waveLabel = SKLabelNode(text: "Welle 1/3")
+        let waveLabel = SKLabelNode(text: "Welle \(pm.currentWaveIndex + 1)/\(pm.currentPlanet.totalWaves)")
         waveLabel.fontName = "AvenirNext-Regular"
         waveLabel.fontSize = 11
         waveLabel.fontColor = UIColor(hex: "#8899cc")
@@ -88,8 +92,7 @@ class BattleScene: SKScene {
         waveLabel.position = CGPoint(x: 0, y: y)
         addChild(waveLabel)
 
-        let tableText = planet != nil ? "\(planet!.multiplicationTable)er-Reihe" : "Reihe"
-        let rightLabel = SKLabelNode(text: tableText)
+        let rightLabel = SKLabelNode(text: "\(multiplicationTable)er-Reihe")
         rightLabel.fontName = "AvenirNext-Regular"
         rightLabel.fontSize = 11
         rightLabel.fontColor = UIColor(hex: "#8899cc")
@@ -103,9 +106,10 @@ class BattleScene: SKScene {
 
     private func setupEnemy() {
         let cy = H * 0.25
+        let planet = ProgressManager.shared.planets[planetIndex]
 
         let body = SKShapeNode(circleOfRadius: 38)
-        body.fillColor = UIColor(hex: "#3A7D44")
+        body.fillColor = UIColor(hex: planet.color)
         body.strokeColor = .clear
         body.position = CGPoint(x: 0, y: cy)
         addChild(body)
@@ -134,7 +138,7 @@ class BattleScene: SKScene {
         mouth.position = CGPoint(x: 0, y: cy - 18)
         addChild(mouth)
 
-        let nameLabel = SKLabelNode(text: "Glob-Alien")
+        let nameLabel = SKLabelNode(text: enemyName)
         nameLabel.fontName = "AvenirNext-Regular"
         nameLabel.fontColor = .white
         nameLabel.fontSize = 13
@@ -161,7 +165,7 @@ class BattleScene: SKScene {
         barFill.name = "enemyHPBar"
         addChild(barFill)
 
-        let hpLabel = SKLabelNode(text: "HP 5/5")
+        let hpLabel = SKLabelNode(text: "HP \(enemyHP)/5")
         hpLabel.fontName = "AvenirNext-Regular"
         hpLabel.fontColor = UIColor(hex: "#8899cc")
         hpLabel.fontSize = 10
@@ -177,7 +181,6 @@ class BattleScene: SKScene {
         let y = H * 0.12
         let spacing: CGFloat = 18
         let startX = -CGFloat(4) * spacing / 2
-
         for i in 0..<5 {
             let dot = SKShapeNode(circleOfRadius: 5)
             dot.fillColor = UIColor(hex: "#1a2a5e")
@@ -229,7 +232,6 @@ class BattleScene: SKScene {
     // MARK: - Answer Buttons
 
     private func setupAnswerButtons() {
-        let answers = ["?", "?", "?", "?"]
         let btnW = W / 2 - 24
         let positions: [CGPoint] = [
             CGPoint(x: -W / 4, y: -H * 0.10),
@@ -237,7 +239,6 @@ class BattleScene: SKScene {
             CGPoint(x: -W / 4, y: -H * 0.20),
             CGPoint(x:  W / 4, y: -H * 0.20)
         ]
-
         for i in 0..<4 {
             let btn = SKShapeNode(rectOf: CGSize(width: btnW, height: 64), cornerRadius: 14)
             btn.fillColor = UIColor(hex: "#534AB7")
@@ -247,7 +248,7 @@ class BattleScene: SKScene {
             btn.name = "answer_\(i)"
             addChild(btn)
 
-            let label = SKLabelNode(text: answers[i])
+            let label = SKLabelNode(text: "?")
             label.fontColor = .white
             label.fontSize = 22
             label.fontName = "AvenirNext-Bold"
@@ -277,7 +278,7 @@ class BattleScene: SKScene {
         barFill.name = "playerHPBar"
         addChild(barFill)
 
-        let hpLabel = SKLabelNode(text: "HP \(playerHP)/3")
+        let hpLabel = SKLabelNode(text: "HP \(playerHP)/\(playerMaxHP)")
         hpLabel.fontName = "AvenirNext-Regular"
         hpLabel.fontColor = UIColor(hex: "#8899cc")
         hpLabel.fontSize = 10
@@ -345,10 +346,9 @@ class BattleScene: SKScene {
         if let label = childNode(withName: "questionLabel") as? SKLabelNode {
             label.text = q.questionText
         }
-        let shuffled = q.allAnswers
         for i in 0..<4 {
             if let label = childNode(withName: "answer_\(i)_label") as? SKLabelNode {
-                label.text = "\(shuffled[i])"
+                label.text = "\(q.allAnswers[i])"
             }
         }
     }
@@ -360,16 +360,15 @@ class BattleScene: SKScene {
             streak = min(streak + 1, 5)
             updateEnemyHP()
             updateStreakDots()
-            if enemyHP <= 0 { battleWon(); return }
+            if enemyHP <= 0 { enemyDefeated(); return }
         } else {
             playerHP -= 1
             streak = 0
             updatePlayerHP()
             updateStreakDots()
-            if playerHP <= 0 { battleLost(); return }
+            if playerHP <= 0 { playerDefeated(); return }
         }
-        guard let planet = Planet.find(id: planetID) else { return }
-        nextQuestion(table: planet.multiplicationTable)
+        nextQuestion(table: multiplicationTable)
     }
 
     private func updateEnemyHP() {
@@ -383,24 +382,36 @@ class BattleScene: SKScene {
 
     private func updatePlayerHP() {
         if let label = childNode(withName: "playerHPLabel") as? SKLabelNode {
-            label.text = "HP \(playerHP)/3"
+            label.text = "HP \(playerHP)/\(playerMaxHP)"
         }
         if let bar = childNode(withName: "playerHPBar") as? SKShapeNode {
-            bar.xScale = max(CGFloat(playerHP) / 3.0, 0)
+            bar.xScale = max(CGFloat(playerHP) / CGFloat(playerMaxHP), 0)
         }
     }
 
-    private func battleWon() {
-        ProgressManager.shared.completePlanet(planetID)
-        if let next = Planet.all.first(where: { $0.unlockRequirement == planetID }) {
-            ProgressManager.shared.unlockPlanet(next.id)
+    func enemyDefeated() {
+        let starsEarned = playerHP == playerMaxHP ? 3 : (playerHP > 1 ? 2 : 1)
+        ProgressManager.shared.completeWave(starsEarned: starsEarned)
+        let wait = SKAction.wait(forDuration: 0.8)
+        let go = SKAction.run { [weak self] in
+            guard let self = self else { return }
+            let reward = RewardScene(size: self.size, starsEarned: starsEarned)
+            reward.scaleMode = .aspectFill
+            self.view?.presentScene(reward, transition: SKTransition.fade(withDuration: 0.5))
         }
-        guard let view = view else { return }
-        SceneManager.transition(to: .reward(planetID: planetID), from: view)
+        run(SKAction.sequence([wait, go]))
     }
 
-    private func battleLost() {
-        guard let view = view else { return }
-        SceneManager.transition(to: .hub, from: view)
+    func playerDefeated() {
+        ProgressManager.shared.failWave()
+        let wait = SKAction.wait(forDuration: 0.8)
+        let go = SKAction.run { [weak self] in
+            guard let self = self else { return }
+            let hub = HubScene(size: self.size)
+            hub.scaleMode = .aspectFill
+            hub.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            self.view?.presentScene(hub, transition: SKTransition.fade(withDuration: 0.5))
+        }
+        run(SKAction.sequence([wait, go]))
     }
 }

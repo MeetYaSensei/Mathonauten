@@ -4,8 +4,7 @@ enum AppScene {
     case hub
     case menu
     case map
-    case battle(planetID: String)
-    case reward(planetID: String)
+    case battle(planetIndex: Int)
 }
 
 final class SceneManager {
@@ -22,10 +21,8 @@ final class SceneManager {
             scene = MenuScene(size: size)
         case .map:
             scene = MapScene(size: size)
-        case .battle(let planetID):
-            scene = BattleScene(size: size, planetID: planetID)
-        case .reward(let planetID):
-            scene = RewardScene(size: size, planetID: planetID)
+        case .battle(let idx):
+            scene = BattleScene(size: size, planetIndex: idx)
         }
 
         scene.scaleMode = .aspectFill
