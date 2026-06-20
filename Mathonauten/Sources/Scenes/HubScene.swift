@@ -12,10 +12,10 @@ class HubScene: SKScene {
     private var gemsLabel: SKLabelNode!
 
     override func didMove(to view: SKView) {
+        let safeTop = view.safeAreaInsets.top > 0 ? view.safeAreaInsets.top : 70
         setupBackground()
         setupStars()
-        setupTopBar()
-        setupNavTabs()
+        setupTopBar(safeTop: safeTop)
         setupRobo()
         setupPlayButton()
         setupProgressBanner()
@@ -62,8 +62,8 @@ class HubScene: SKScene {
 
     // MARK: - Top Bar
 
-    private func setupTopBar() {
-        let y = H * 0.44
+    private func setupTopBar(safeTop: CGFloat) {
+        let y = H * 0.5 - safeTop - 30
 
         let avatar = SKShapeNode(circleOfRadius: 18)
         avatar.fillColor = UIColor(hex: "#1a2a5e")
@@ -144,48 +144,6 @@ class HubScene: SKScene {
         gear.verticalAlignmentMode = .center
         gear.position = CGPoint(x: W * 0.44, y: y)
         addChild(gear)
-    }
-
-    // MARK: - Nav Tabs
-
-    private func setupNavTabs() {
-        let y = H * 0.38
-        let tabW = W / 5 - 8
-        let tabs: [(String, String, String)] = [
-            ("🏠", "Hub",     "tab_hub"),
-            ("🗺", "Karte",   "tab_map"),
-            ("🏆", "Erfolge", "tab_achievements"),
-            ("🎒", "Items",   "tab_items"),
-            ("📊", "Stats",   "tab_stats"),
-        ]
-        let xs: [CGFloat] = [-2*W/5, -W/5, 0, W/5, 2*W/5]
-
-        for (i, tab) in tabs.enumerated() {
-            let isActive = i == 0
-            let bg = SKShapeNode(rectOf: CGSize(width: tabW, height: 38), cornerRadius: 8)
-            bg.fillColor = isActive ? UIColor(hex: "#534AB7") : UIColor(hex: "#131d3a")
-            bg.strokeColor = isActive ? UIColor(hex: "#7a70d4") : UIColor(hex: "#2a3a6e")
-            bg.lineWidth = 1
-            bg.position = CGPoint(x: xs[i], y: y)
-            bg.name = tab.2
-            addChild(bg)
-
-            let icon = SKLabelNode(text: tab.0)
-            icon.fontSize = 14
-            icon.verticalAlignmentMode = .center
-            icon.position = CGPoint(x: xs[i], y: y + 7)
-            icon.name = tab.2
-            addChild(icon)
-
-            let lbl = SKLabelNode(text: tab.1)
-            lbl.fontName = "AvenirNext-Regular"
-            lbl.fontSize = 7
-            lbl.fontColor = isActive ? .white : UIColor(hex: "#8899cc")
-            lbl.verticalAlignmentMode = .center
-            lbl.position = CGPoint(x: xs[i], y: y - 9)
-            lbl.name = tab.2
-            addChild(lbl)
-        }
     }
 
     // MARK: - Robo
@@ -447,9 +405,10 @@ class HubScene: SKScene {
     // MARK: - Bottom Nav
 
     private func setupBottomNav() {
-        let y = -H * 0.46
+        let navH: CGFloat = 60
+        let y = -H * 0.5 + navH * 0.5
 
-        let navBg = SKShapeNode(rectOf: CGSize(width: W, height: 56))
+        let navBg = SKShapeNode(rectOf: CGSize(width: W, height: navH))
         navBg.fillColor = UIColor(hex: "#0d1630")
         navBg.strokeColor = UIColor(hex: "#1e2d5a")
         navBg.lineWidth = 1
@@ -460,15 +419,16 @@ class HubScene: SKScene {
             ("🏠", "Hub",    "bottom_hub",     true),
             ("🗺", "Karte",  "bottom_map",     false),
             ("🏆", "Rang",   "bottom_rank",    false),
+            ("🛍️", "Shop",  "bottom_shop",    false),
             ("👤", "Profil", "bottom_profile", false),
         ]
-        let xs: [CGFloat] = [-3*W/8, -W/8, W/8, 3*W/8]
+        let xs: [CGFloat] = [-2*W/5, -W/5, 0, W/5, 2*W/5]
 
         for (i, item) in items.enumerated() {
             let color: UIColor = item.3 ? UIColor(hex: "#7a70d4") : UIColor(hex: "#5a6a99")
 
             let icon = SKLabelNode(text: item.0)
-            icon.fontSize = 20
+            icon.fontSize = 18
             icon.fontColor = color
             icon.verticalAlignmentMode = .center
             icon.position = CGPoint(x: xs[i], y: y + 10)
@@ -495,10 +455,17 @@ class HubScene: SKScene {
         for node in nodes(at: location) {
             guard let name = node.name else { continue }
             switch name {
-            case "tab_map", "bottom_map":
+            case "bottom_map":
                 SoundManager.shared.playSFX(SoundName.tap)
                 guard let view = view else { return }
                 SceneManager.transition(to: .map, from: view)
+                return
+            case "bottom_shop":
+                SoundManager.shared.playSFX(SoundName.tap)
+                let shop = ShopScene(size: size)
+                shop.scaleMode = .aspectFill
+                shop.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+                view?.presentScene(shop, transition: SKTransition.fade(withDuration: 0.4))
                 return
             case let n where n.hasPrefix("dc_card_"):
                 SoundManager.shared.playSFX(SoundName.tap)
@@ -515,7 +482,7 @@ class HubScene: SKScene {
                 battle.anchorPoint = CGPoint(x: 0.5, y: 0.5)
                 view?.presentScene(battle, transition: SKTransition.push(with: .left, duration: 0.4))
                 return
-            case "tab_hub", "bottom_hub":
+            case "bottom_hub":
                 return
             default:
                 break
