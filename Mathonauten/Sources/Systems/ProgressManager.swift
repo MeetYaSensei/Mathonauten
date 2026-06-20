@@ -3,7 +3,11 @@ import Foundation
 final class ProgressManager {
     static let shared = ProgressManager()
     private let defaults = UserDefaults.standard
-    private init() {}
+    private init() {
+        if defaults.object(forKey: "gems") == nil {
+            gems = 100
+        }
+    }
 
     var currentPlanetIndex: Int {
         get { defaults.integer(forKey: "currentPlanetIndex") }
