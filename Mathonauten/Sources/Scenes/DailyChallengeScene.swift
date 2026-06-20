@@ -221,19 +221,22 @@ class DailyChallengeScene: SKScene {
     // MARK: - Answer Options
 
     private func makeOptions(correct: Int, multiplier: Int, factor: Int) -> [Int] {
-        var pool = Set<Int>()
-        for o in [correct+1, correct-1, correct+multiplier, correct-multiplier, correct+factor, correct-factor] {
-            if o > 0 && o != correct { pool.insert(o) }
+        let candidates = [
+            correct - multiplier, correct + multiplier,
+            correct - factor,     correct + factor,
+            correct * 2,          correct - 1, correct + 1
+        ]
+        var distractors: [Int] = []
+        for c in candidates.shuffled() {
+            let val = max(1, c)
+            if val != correct && !distractors.contains(val) {
+                distractors.append(val)
+                if distractors.count == 3 { break }
+            }
         }
-        var extra = 2
-        while pool.count < 3 {
-            let c = correct + extra
-            if c != correct { pool.insert(c) }
-            extra += 3
-        }
-        var opts = Array(pool.prefix(3)) + [correct]
-        opts.shuffle()
-        return opts
+        var answers = distractors + [correct]
+        answers.shuffle()
+        return answers
     }
 
     // MARK: - Touch

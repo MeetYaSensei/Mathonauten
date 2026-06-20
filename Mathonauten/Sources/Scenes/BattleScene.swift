@@ -6,6 +6,7 @@ class BattleScene: SKScene {
     private let multiplicationTable: Int
     private let enemyName: String
     private var currentQuestion: MathQuestion?
+    private var currentAnswers: [Int] = []
     private var playerHP    = 3
     private let playerMaxHP = 3
     private var enemyHP     = 5
@@ -333,8 +334,8 @@ class BattleScene: SKScene {
         for node in nodes(at: location) {
             guard let name = node.name, name.hasPrefix("answer_"), !name.hasSuffix("_label") else { continue }
             if let index = Int(name.replacingOccurrences(of: "answer_", with: "")),
-               let q = currentQuestion {
-                answerSelected(q.allAnswers[index])
+               index < currentAnswers.count {
+                answerSelected(currentAnswers[index])
             }
             break
         }
@@ -345,12 +346,13 @@ class BattleScene: SKScene {
     func nextQuestion(table: Int) {
         currentQuestion = MathQuestion.generate(table: table)
         guard let q = currentQuestion else { return }
+        currentAnswers = q.allAnswers.shuffled()
         if let label = childNode(withName: "questionLabel") as? SKLabelNode {
             label.text = q.questionText
         }
         for i in 0..<4 {
             if let label = childNode(withName: "answer_\(i)_label") as? SKLabelNode {
-                label.text = "\(q.allAnswers[i])"
+                label.text = "\(currentAnswers[i])"
             }
         }
     }

@@ -7,7 +7,7 @@ struct MathQuestion {
     let wrongAnswers: [Int]
 
     var allAnswers: [Int] {
-        ([correctAnswer] + wrongAnswers).shuffled()
+        [correctAnswer] + wrongAnswers
     }
 
     /// Generiert eine Aufgabe aus der Malfolge
