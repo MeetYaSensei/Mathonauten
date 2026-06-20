@@ -12,6 +12,7 @@ class BattleScene: SKScene {
     private var enemyHP     = 5
     private var streak      = 0
     private var isGameOver  = false
+    private var pauseOverlay: SKNode?
 
     private var W: CGFloat { size.width }
     private var H: CGFloat { size.height }
@@ -38,6 +39,7 @@ class BattleScene: SKScene {
         setupAnswerButtons()
         setupPlayerHP()
         setupRoboPanel()
+        setupPauseButton()
         nextQuestion(table: multiplicationTable)
         SoundManager.shared.playBGM(SoundName.bgmBattle)
     }
@@ -326,12 +328,152 @@ class BattleScene: SKScene {
         addChild(speechLabel)
     }
 
+    // MARK: - Pause
+
+    private func setupPauseButton() {
+        let y = H * 0.44
+        let x = -W / 2 + 32
+
+        let circle = SKShapeNode(circleOfRadius: 18)
+        circle.fillColor = UIColor(white: 1.0, alpha: 0.12)
+        circle.strokeColor = UIColor(white: 1.0, alpha: 0.25)
+        circle.lineWidth = 1.5
+        circle.position = CGPoint(x: x, y: y)
+        circle.name = "pause_btn"
+        circle.zPosition = 10
+        addChild(circle)
+
+        let label = SKLabelNode(text: "❚❚")
+        label.fontSize = 11
+        label.fontColor = UIColor(white: 1.0, alpha: 0.75)
+        label.verticalAlignmentMode = .center
+        label.position = CGPoint(x: x, y: y)
+        label.name = "pause_btn"
+        label.zPosition = 11
+        addChild(label)
+    }
+
+    private func showPauseMenu() {
+        let overlay = SKNode()
+        overlay.name = "pauseOverlay"
+        overlay.zPosition = 20
+        addChild(overlay)
+        pauseOverlay = overlay
+
+        let dim = SKShapeNode(rectOf: size)
+        dim.fillColor = UIColor(hex: "#08102a")
+        dim.strokeColor = .clear
+        dim.alpha = 0.82
+        overlay.addChild(dim)
+
+        let cardW = W * 0.78
+        let cardH: CGFloat = 222
+        let card = SKShapeNode(rectOf: CGSize(width: cardW, height: cardH), cornerRadius: 18)
+        card.fillColor = UIColor(hex: "#1a2550")
+        card.strokeColor = UIColor(hex: "#2a3a7e")
+        card.lineWidth = 1.5
+        card.zPosition = 1
+        overlay.addChild(card)
+
+        let title = SKLabelNode(text: "Pause")
+        title.fontName = "AvenirNext-Bold"
+        title.fontSize = 30
+        title.fontColor = .white
+        title.verticalAlignmentMode = .center
+        title.position = CGPoint(x: 0, y: 68)
+        title.zPosition = 2
+        overlay.addChild(title)
+
+        let sub = SKLabelNode(text: "Kurze Pause? Kein Problem! 🤖")
+        sub.fontName = "AvenirNext-Regular"
+        sub.fontSize = 11
+        sub.fontColor = UIColor(hex: "#8899cc")
+        sub.verticalAlignmentMode = .center
+        sub.position = CGPoint(x: 0, y: 36)
+        sub.zPosition = 2
+        overlay.addChild(sub)
+
+        let resumeBtn = SKShapeNode(rectOf: CGSize(width: cardW - 36, height: 48), cornerRadius: 13)
+        resumeBtn.fillColor = UIColor(hex: "#0F6E56")
+        resumeBtn.strokeColor = UIColor(hex: "#1d9e75")
+        resumeBtn.lineWidth = 1.5
+        resumeBtn.position = CGPoint(x: 0, y: -4)
+        resumeBtn.name = "resume_btn"
+        resumeBtn.zPosition = 2
+        overlay.addChild(resumeBtn)
+
+        let resumeLabel = SKLabelNode(text: "Fortsetzen")
+        resumeLabel.fontName = "AvenirNext-Bold"
+        resumeLabel.fontSize = 17
+        resumeLabel.fontColor = .white
+        resumeLabel.verticalAlignmentMode = .center
+        resumeLabel.position = CGPoint(x: 0, y: -4)
+        resumeLabel.name = "resume_btn"
+        resumeLabel.zPosition = 3
+        overlay.addChild(resumeLabel)
+
+        let quitBtn = SKShapeNode(rectOf: CGSize(width: cardW - 36, height: 48), cornerRadius: 13)
+        quitBtn.fillColor = UIColor(hex: "#C0392B")
+        quitBtn.strokeColor = UIColor(hex: "#e74c3c")
+        quitBtn.lineWidth = 1.5
+        quitBtn.position = CGPoint(x: 0, y: -64)
+        quitBtn.name = "quit_btn"
+        quitBtn.zPosition = 2
+        overlay.addChild(quitBtn)
+
+        let quitLabel = SKLabelNode(text: "Aufgeben")
+        quitLabel.fontName = "AvenirNext-Bold"
+        quitLabel.fontSize = 17
+        quitLabel.fontColor = .white
+        quitLabel.verticalAlignmentMode = .center
+        quitLabel.position = CGPoint(x: 0, y: -64)
+        quitLabel.name = "quit_btn"
+        quitLabel.zPosition = 3
+        overlay.addChild(quitLabel)
+
+        self.isPaused = true
+    }
+
+    private func hidePauseMenu() {
+        self.isPaused = false
+        pauseOverlay?.removeFromParent()
+        pauseOverlay = nil
+    }
+
+    private func quitToHub() {
+        self.isPaused = false
+        SoundManager.shared.stopBGM()
+        let hub = HubScene(size: size)
+        hub.scaleMode = .aspectFill
+        hub.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        view?.presentScene(hub, transition: SKTransition.fade(withDuration: 0.5))
+    }
+
     // MARK: - Touch
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
         let location = touch.location(in: self)
-        for node in nodes(at: location) {
+        let nodesHit = nodes(at: location)
+
+        for node in nodesHit {
+            switch node.name {
+            case "pause_btn":
+                if isPaused { hidePauseMenu() } else { showPauseMenu() }
+                return
+            case "resume_btn":
+                hidePauseMenu()
+                return
+            case "quit_btn":
+                quitToHub()
+                return
+            default: break
+            }
+        }
+
+        guard !isPaused else { return }
+
+        for node in nodesHit {
             guard let name = node.name, name.hasPrefix("answer_"), !name.hasSuffix("_label") else { continue }
             if let index = Int(name.replacingOccurrences(of: "answer_", with: "")),
                index < currentAnswers.count {
