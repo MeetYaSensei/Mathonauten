@@ -68,6 +68,10 @@ final class ProgressManager {
         gems += amount
     }
 
+    func spendGems(_ amount: Int) {
+        gems = max(0, gems - amount)
+    }
+
     var hubProgressText: String {
         "\(currentPlanet.name) · \(currentPlanet.multiplicationTable)er-Reihe"
     }
