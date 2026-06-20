@@ -21,6 +21,7 @@ class HubScene: SKScene {
         setupProgressBanner()
         setupDailyChallenges()
         setupBottomNav()
+        DailyChallengeManager.shared.refreshIfNeeded()
         refreshUI()
         SoundManager.shared.playBGM(SoundName.bgmHub)
     }
@@ -377,46 +378,51 @@ class HubScene: SKScene {
         allLabel.horizontalAlignmentMode = .right
         allLabel.verticalAlignmentMode = .center
         allLabel.position = CGPoint(x: W/2 - 16, y: headerY)
+        allLabel.name = "dc_card_any"
         addChild(allLabel)
 
+        let challenges = DailyChallengeManager.shared.challenges
+        let icons = ["🌱", "🔥", "⭐"]
         let cardY = -H * 0.34
         let cardW = W / 3 - 12
-        let cards: [(String, String, String, CGFloat)] = [
-            ("⚡", "3 Kämpfe",    "+50 ⭐", 0.66),
-            ("🎯", "10x richtig", "+30 ⭐", 0.30),
-            ("🌍", "Planet done", "💎 +2",  0.00),
-        ]
         let cardXs: [CGFloat] = [-W * 0.31, 0, W * 0.31]
 
-        for (i, card) in cards.enumerated() {
+        for (i, c) in challenges.enumerated() {
             let cx = cardXs[i]
+            let done = c.isCompleted
+
             let cardBg = SKShapeNode(rectOf: CGSize(width: cardW, height: 70), cornerRadius: 12)
-            cardBg.fillColor = UIColor(hex: "#131d3a")
-            cardBg.strokeColor = UIColor(hex: "#2a3a6e")
+            cardBg.fillColor = UIColor(hex: done ? "#0d1a10" : "#131d3a")
+            cardBg.strokeColor = UIColor(hex: done ? "#1d9e75" : "#2a3a6e")
             cardBg.lineWidth = 1
             cardBg.position = CGPoint(x: cx, y: cardY)
+            cardBg.alpha = done ? 0.65 : 1.0
+            cardBg.name = "dc_card_\(i)"
             addChild(cardBg)
 
-            let iconLabel = SKLabelNode(text: card.0)
-            iconLabel.fontSize = 16
+            let iconLabel = SKLabelNode(text: done ? "✅" : icons[i])
+            iconLabel.fontSize = 15
             iconLabel.verticalAlignmentMode = .center
             iconLabel.position = CGPoint(x: cx, y: cardY + 22)
+            iconLabel.name = "dc_card_\(i)"
             addChild(iconLabel)
 
-            let textLabel = SKLabelNode(text: card.1)
-            textLabel.fontName = "AvenirNext-Regular"
-            textLabel.fontSize = 9
-            textLabel.fontColor = UIColor(hex: "#8899cc")
-            textLabel.verticalAlignmentMode = .center
-            textLabel.position = CGPoint(x: cx, y: cardY + 6)
-            addChild(textLabel)
+            let questionLabel = SKLabelNode(text: "\(c.multiplier) × \(c.factor) = ?")
+            questionLabel.fontName = "AvenirNext-Bold"
+            questionLabel.fontSize = 10
+            questionLabel.fontColor = UIColor(hex: done ? "#5a9e75" : "#ccd8ff")
+            questionLabel.verticalAlignmentMode = .center
+            questionLabel.position = CGPoint(x: cx, y: cardY + 6)
+            questionLabel.name = "dc_card_\(i)"
+            addChild(questionLabel)
 
-            let rewardLabel = SKLabelNode(text: card.2)
+            let rewardLabel = SKLabelNode(text: "💎 +\(c.gemReward)")
             rewardLabel.fontName = "AvenirNext-Bold"
             rewardLabel.fontSize = 9
-            rewardLabel.fontColor = UIColor(hex: "#eedd88")
+            rewardLabel.fontColor = UIColor(hex: "#aa88ff")
             rewardLabel.verticalAlignmentMode = .center
             rewardLabel.position = CGPoint(x: cx, y: cardY - 8)
+            rewardLabel.name = "dc_card_\(i)"
             addChild(rewardLabel)
 
             let miniBarW = cardW - 16
@@ -428,13 +434,12 @@ class HubScene: SKScene {
             miniBarBg.position = CGPoint(x: cx, y: miniBarY)
             addChild(miniBarBg)
 
-            if card.3 > 0 {
-                let fillW = max(miniBarW * card.3, 4)
-                let miniFill = SKShapeNode(rectOf: CGSize(width: fillW, height: 4), cornerRadius: 2)
-                miniFill.fillColor = UIColor(hex: "#e07030")
-                miniFill.strokeColor = .clear
-                miniFill.position = CGPoint(x: cx - miniBarW/2 + fillW/2, y: miniBarY)
-                addChild(miniFill)
+            if done {
+                let fill = SKShapeNode(rectOf: CGSize(width: miniBarW, height: 4), cornerRadius: 2)
+                fill.fillColor = UIColor(hex: "#1d9e75")
+                fill.strokeColor = .clear
+                fill.position = CGPoint(x: cx, y: miniBarY)
+                addChild(fill)
             }
         }
     }
@@ -494,6 +499,14 @@ class HubScene: SKScene {
                 SoundManager.shared.playSFX(SoundName.tap)
                 guard let view = view else { return }
                 SceneManager.transition(to: .map, from: view)
+                return
+            case let n where n.hasPrefix("dc_card_"):
+                SoundManager.shared.playSFX(SoundName.tap)
+                DailyChallengeManager.shared.refreshIfNeeded()
+                let dcScene = DailyChallengeScene(size: size)
+                dcScene.scaleMode = .aspectFill
+                dcScene.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+                view?.presentScene(dcScene, transition: SKTransition.fade(withDuration: 0.4))
                 return
             case "playBtn":
                 SoundManager.shared.playSFX(SoundName.tap)

@@ -22,6 +22,8 @@
 		AA000013 /* HubScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100013 /* HubScene.swift */; };
 		AA000014 /* GameOverScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100014 /* GameOverScene.swift */; };
 		AA000015 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100015 /* SoundManager.swift */; };
+		AA000016 /* DailyChallengeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100016 /* DailyChallengeManager.swift */; };
+		AA000017 /* DailyChallengeScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100017 /* DailyChallengeScene.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +42,8 @@
 		AA100013 /* HubScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubScene.swift; sourceTree = "<group>"; };
 		AA100014 /* GameOverScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverScene.swift; sourceTree = "<group>"; };
 		AA100015 /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
+		AA100016 /* DailyChallengeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyChallengeManager.swift; sourceTree = "<group>"; };
+		AA100017 /* DailyChallengeScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyChallengeScene.swift; sourceTree = "<group>"; };
 		AAPROD001 /* Mathonauten.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mathonauten.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -83,6 +87,7 @@
 				AA100009 /* BattleScene.swift */,
 				AA100010 /* RewardScene.swift */,
 				AA100013 /* HubScene.swift */,
+				AA100017 /* DailyChallengeScene.swift */,
 			);
 			path = "Sources/Scenes";
 			sourceTree = "<group>";
@@ -93,6 +98,7 @@
 				AA100003 /* ProgressManager.swift */,
 				AA100004 /* SceneManager.swift */,
 				AA100011 /* DialogSystem.swift */,
+				AA100016 /* DailyChallengeManager.swift */,
 			);
 			path = "Sources/Systems";
 			sourceTree = "<group>";
@@ -194,6 +200,8 @@
 				AA000013 /* HubScene.swift in Sources */,
 				AA000014 /* GameOverScene.swift in Sources */,
 				AA000015 /* SoundManager.swift in Sources */,
+				AA000016 /* DailyChallengeManager.swift in Sources */,
+				AA000017 /* DailyChallengeScene.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

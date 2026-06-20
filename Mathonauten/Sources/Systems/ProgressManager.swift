@@ -64,6 +64,10 @@ final class ProgressManager {
 
     func failWave() {}
 
+    func addGems(_ amount: Int) {
+        gems += amount
+    }
+
     var hubProgressText: String {
         "\(currentPlanet.name) · \(currentPlanet.multiplicationTable)er-Reihe"
     }
