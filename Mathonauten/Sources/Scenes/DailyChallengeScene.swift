@@ -113,9 +113,7 @@ class DailyChallengeScene: SKScene {
         addChild(questionLabel)
 
         correctAnswer = challenge.multiplier * challenge.factor
-        currentAnswers = makeOptions(correct: correctAnswer,
-                                     multiplier: challenge.multiplier,
-                                     factor: challenge.factor)
+        currentAnswers = generateAnswerOptions(correct: correctAnswer)
 
         let btnW = W / 2 - 18
         let positions: [CGPoint] = [
@@ -220,23 +218,23 @@ class DailyChallengeScene: SKScene {
 
     // MARK: - Answer Options
 
-    private func makeOptions(correct: Int, multiplier: Int, factor: Int) -> [Int] {
-        let candidates = [
-            correct - multiplier, correct + multiplier,
-            correct - factor,     correct + factor,
-            correct * 2,          correct - 1, correct + 1
-        ]
-        var distractors: [Int] = []
-        for c in candidates.shuffled() {
-            let val = max(1, c)
-            if val != correct && !distractors.contains(val) {
-                distractors.append(val)
-                if distractors.count == 3 { break }
-            }
+    private func generateAnswerOptions(correct: Int) -> [Int] {
+        var options = Set<Int>()
+        options.insert(correct)
+        var attempts = 0
+        while options.count < 4 && attempts < 100 {
+            attempts += 1
+            let offset = Int.random(in: -5...5)
+            let candidate = correct + offset
+            guard candidate > 0 && candidate != correct else { continue }
+            options.insert(candidate)
         }
-        var answers = distractors + [correct]
-        answers.shuffle()
-        return answers
+        var fallback = 1
+        while options.count < 4 {
+            if !options.contains(fallback) { options.insert(fallback) }
+            fallback += 1
+        }
+        return options.shuffled()
     }
 
     // MARK: - Touch

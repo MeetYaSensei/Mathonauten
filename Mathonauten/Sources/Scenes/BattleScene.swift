@@ -343,10 +343,29 @@ class BattleScene: SKScene {
 
     // MARK: - Game Logic
 
+    private func generateAnswerOptions(correct: Int) -> [Int] {
+        var options = Set<Int>()
+        options.insert(correct)
+        var attempts = 0
+        while options.count < 4 && attempts < 100 {
+            attempts += 1
+            let offset = Int.random(in: -5...5)
+            let candidate = correct + offset
+            guard candidate > 0 && candidate != correct else { continue }
+            options.insert(candidate)
+        }
+        var fallback = 1
+        while options.count < 4 {
+            if !options.contains(fallback) { options.insert(fallback) }
+            fallback += 1
+        }
+        return options.shuffled()
+    }
+
     func nextQuestion(table: Int) {
         currentQuestion = MathQuestion.generate(table: table)
         guard let q = currentQuestion else { return }
-        currentAnswers = q.allAnswers.shuffled()
+        currentAnswers = generateAnswerOptions(correct: q.correctAnswer)
         if let label = childNode(withName: "questionLabel") as? SKLabelNode {
             label.text = q.questionText
         }
